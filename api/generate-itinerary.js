@@ -17,22 +17,76 @@ const itinerarySchema = {
           day: { type: "INTEGER" },
           place: { type: "STRING" },
           description: { type: "STRING" },
-          activities: {
-            type: "ARRAY",
-            items: { type: "STRING" },
-          },
+          activities: { type: "ARRAY", items: { type: "STRING" } },
           travelTip: { type: "STRING" },
         },
         required: ["day", "place", "description", "activities", "travelTip"],
       },
     },
-    practicalTips: {
-      type: "ARRAY",
-      items: { type: "STRING" },
-    },
+    practicalTips: { type: "ARRAY", items: { type: "STRING" } },
   },
   required: ["title", "summary", "itinerary", "practicalTips"],
 };
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function requestGemini(apiKey, prompt) {
+  const endpoint =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+
+  let lastError = null;
+
+  // A bounded retry prevents the UI from waiting indefinitely during temporary overload.
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const geminiResponse = await fetch(endpoint, {
+        method: "POST",
+        signal: AbortSignal.timeout(18000),
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 5000,
+            responseMimeType: "application/json",
+            responseSchema: itinerarySchema,
+          },
+        }),
+      });
+
+      const result = await geminiResponse.json().catch(() => ({}));
+
+      if (geminiResponse.ok) return result;
+
+      const message = result.error?.message || `Gemini returned HTTP ${geminiResponse.status}`;
+      const retryable = [429, 500, 502, 503, 504].includes(geminiResponse.status);
+
+      if (!retryable || attempt === 2) {
+        const error = new Error(message);
+        error.status = geminiResponse.status;
+        throw error;
+      }
+
+      lastError = new Error(message);
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error.name === "TimeoutError" ||
+        error.name === "AbortError" ||
+        error.status === undefined ||
+        [429, 500, 502, 503, 504].includes(error.status);
+
+      if (!retryable || attempt === 2) throw error;
+    }
+
+    await sleep(900);
+  }
+
+  throw lastError || new Error("Gemini request failed.");
+}
 
 export default async function handler(request, response) {
   if (request.method !== "POST") {
@@ -82,35 +136,7 @@ Requirements:
 - Return only data matching the supplied JSON schema.
 `;
 
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 5000,
-            responseMimeType: "application/json",
-            responseSchema: itinerarySchema,
-          },
-        }),
-      },
-    );
-
-    const result = await geminiResponse.json();
-
-    if (!geminiResponse.ok) {
-      console.error("Gemini API error:", result.error?.message || geminiResponse.status);
-      return response.status(502).json({
-        error: "Gemini could not generate the itinerary. Please try again.",
-      });
-    }
-
+    const result = await requestGemini(apiKey, prompt);
     const generatedText = result.candidates?.[0]?.content?.parts
       ?.map((part) => part.text || "")
       .join("");
@@ -121,7 +147,15 @@ Requirements:
       });
     }
 
-    const itinerary = JSON.parse(generatedText);
+    let itinerary;
+    try {
+      itinerary = JSON.parse(generatedText);
+    } catch {
+      return response.status(502).json({
+        error: "Gemini returned an unreadable itinerary. Please try again.",
+      });
+    }
+
     if (!Array.isArray(itinerary.itinerary) || itinerary.itinerary.length !== days) {
       return response.status(502).json({
         error: "The generated itinerary was incomplete. Please try again.",
@@ -140,9 +174,22 @@ Requirements:
       generatedBy: "Gemini",
     });
   } catch (error) {
-    console.error("Itinerary generation failed:", error);
-    return response.status(400).json({
-      error: "Invalid request or unexpected server error. Please try again.",
+    console.error("Itinerary generation failed:", error.message || error);
+
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return response.status(504).json({
+        error: "Gemini took too long to respond. Please try again in a moment.",
+      });
+    }
+
+    if ([429, 500, 502, 503, 504].includes(error.status)) {
+      return response.status(503).json({
+        error: "Gemini is temporarily busy. Please try again shortly.",
+      });
+    }
+
+    return response.status(500).json({
+      error: "We couldn't generate your itinerary. Please try again.",
     });
   }
 }
