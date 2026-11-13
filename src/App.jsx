@@ -88,6 +88,12 @@ const routeLibrary = {
   ],
 }
 
+const formatLKR = (value) => new Intl.NumberFormat('en-LK', {
+  style: 'currency',
+  currency: 'LKR',
+  maximumFractionDigits: 0,
+}).format(value)
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -173,22 +179,22 @@ function App() {
 
     const rates = {
       Budget: {
-        accommodation: 35,
-        transport: 18,
-        food: 18,
-        activities: 12,
+        accommodation: 6000,
+        transport: 3500,
+        food: 2500,
+        activities: 1500,
       },
       Medium: {
-        accommodation: 70,
-        transport: 35,
-        food: 32,
-        activities: 25,
+        accommodation: 15000,
+        transport: 7000,
+        food: 5000,
+        activities: 3500,
       },
       Premium: {
-        accommodation: 150,
-        transport: 70,
-        food: 60,
-        activities: 50,
+        accommodation: 35000,
+        transport: 15000,
+        food: 10000,
+        activities: 8000,
       },
     }
 
@@ -646,7 +652,7 @@ function App() {
                       <div>
                         <p>ESTIMATED TRIP BUDGET</p>
                         <h4>
-                          ${estimatedTotal.toLocaleString()}
+                          ${formatLKR(estimatedTotal)}
                           <span> approx.</span>
                         </h4>
                       </div>
@@ -657,28 +663,28 @@ function App() {
                     <div className="budgetGrid">
                       <div>
                         <span>Accommodation</span>
-                        <strong>${budgetEstimate.accommodation}</strong>
+                        <strong>{formatLKR(budgetEstimate.accommodation)}</strong>
                       </div>
 
                       <div>
                         <span>Transport</span>
-                        <strong>${budgetEstimate.transport}</strong>
+                        <strong>{formatLKR(budgetEstimate.transport)}</strong>
                       </div>
 
                       <div>
                         <span>Food</span>
-                        <strong>${budgetEstimate.food}</strong>
+                        <strong>{formatLKR(budgetEstimate.food)}</strong>
                       </div>
 
                       <div>
                         <span>Activities</span>
-                        <strong>${budgetEstimate.activities}</strong>
+                        <strong>{formatLKR(budgetEstimate.activities)}</strong>
                       </div>
                     </div>
 
                     <p className="budgetDisclaimer">
-                      Demonstration estimate only. Actual prices vary by date,
-                      provider, exchange rates and traveler choices.
+                      Indicative LKR estimates for planning only. Actual prices vary by date,
+                      provider, season and traveler choices.
                     </p>
                   </div>
                 </div>
