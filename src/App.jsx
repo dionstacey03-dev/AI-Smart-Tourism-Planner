@@ -40,6 +40,12 @@ const destinations = [
   },
 ]
 
+const formatLKR = (value) => new Intl.NumberFormat('en-LK', {
+  style: 'currency',
+  currency: 'LKR',
+  maximumFractionDigits: 0,
+}).format(value)
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
