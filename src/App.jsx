@@ -212,7 +212,7 @@ function App() {
           <div className="heroContent">
             <div className="prototypeBadge">
               <span></span>
-              Portfolio Prototype
+              GEMINI AI POWERED
             </div>
 
             <p className="eyebrow">AI-POWERED SRI LANKA TRAVEL PLANNING</p>
@@ -267,7 +267,7 @@ function App() {
                   <h3>Sri Lanka Explorer</h3>
                 </div>
 
-                <span className="liveBadge">PROTOTYPE</span>
+                <span className="liveBadge">AI CONCEPT ROUTE</span>
               </div>
 
               <div className="routeMeta">
@@ -684,8 +684,8 @@ function App() {
             </div>
 
             <span>
-              A portfolio concept exploring how intelligent software can make
-              travel planning more personalized and easier to understand.
+              Gemini-powered planning makes it easier to shape a Sri Lankan journey around
+              your interests, budget and preferred pace.
             </span>
           </div>
 
@@ -738,14 +738,14 @@ function App() {
             <p>THE NEXT VERSION</p>
 
             <h2>
-              Built as a prototype.
-              <span> Designed to grow.</span>
+              Powered by AI.
+              <span> Ready to explore.</span>
             </h2>
 
             <p className="futureText">
-              Future development can connect real AI models, live weather,
-              mapping, road conditions and travel-service APIs to turn the
-              concept into a more intelligent planning platform.
+              CeylonAI already creates personalized itineraries with Gemini. The next
+              releases will add saved trips, interactive maps and carefully
+              selected live travel information.
             </p>
           </div>
 
