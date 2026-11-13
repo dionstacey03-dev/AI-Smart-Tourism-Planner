@@ -40,60 +40,6 @@ const destinations = [
   },
 ]
 
-const routeLibrary = {
-  'Nature & Adventure': [
-    ['Kandy', 'Explore the hill capital and prepare for the scenic journey ahead.'],
-    ['Nuwara Eliya', 'Discover tea country, cool mountain weather and viewpoints.'],
-    ['Ella', 'Enjoy hiking trails, waterfalls and dramatic mountain scenery.'],
-    ['Yala', 'Experience a wildlife-focused day surrounded by nature.'],
-    ['Mirissa', 'Slow down on the south coast after your inland adventure.'],
-    ['Galle', 'Explore the historic fort and finish with coastal views.'],
-    ['Colombo', 'Complete the journey with food, shopping and city experiences.'],
-  ],
-  'Culture & Heritage': [
-    ['Colombo', 'Begin with museums, local food and an introduction to Sri Lanka.'],
-    ['Sigiriya', 'Explore the Cultural Triangle and the iconic rock fortress area.'],
-    ['Dambulla', 'Discover historic cave temples and cultural landmarks.'],
-    ['Kandy', 'Experience heritage, traditional culture and the hill capital.'],
-    ['Nuwara Eliya', 'Travel through tea country and colonial-era landscapes.'],
-    ['Galle', 'Walk through the historic fort and coastal streets.'],
-    ['Colombo', 'Return to the capital for the final day of the journey.'],
-  ],
-  'Beaches & Relaxation': [
-    ['Colombo', 'Arrive, settle in and enjoy a relaxed introduction to the island.'],
-    ['Bentota', 'Enjoy beaches, water activities and a slower travel pace.'],
-    ['Galle', 'Explore the fort before continuing along the southern coast.'],
-    ['Mirissa', 'Relax by the ocean and enjoy the tropical coastline.'],
-    ['Weligama', 'Spend time on the beach and explore the local coastal area.'],
-    ['Unawatuna', 'Enjoy another relaxed beach day near Galle.'],
-    ['Colombo', 'Return to Colombo and complete the trip at an easy pace.'],
-  ],
-  Wildlife: [
-    ['Colombo', 'Start the journey and prepare for Sri Lanka’s nature regions.'],
-    ['Sigiriya', 'Combine cultural landscapes with nearby natural surroundings.'],
-    ['Kandy', 'Explore the central hills and botanical surroundings.'],
-    ['Yala', 'Enjoy a safari-focused wildlife experience.'],
-    ['Udawalawe', 'Explore another major wildlife region and open landscapes.'],
-    ['Mirissa', 'Finish with coastal nature and relaxation.'],
-    ['Galle', 'Complete the journey with heritage and coastal scenery.'],
-  ],
-  'Food & Local Experiences': [
-    ['Colombo', 'Explore markets, restaurants and Sri Lankan urban food culture.'],
-    ['Kandy', 'Experience traditional cuisine and central Sri Lankan culture.'],
-    ['Nuwara Eliya', 'Discover tea estates and cool-climate food experiences.'],
-    ['Ella', 'Enjoy cafés, local dishes and mountain scenery.'],
-    ['Galle', 'Explore southern cuisine within the historic fort area.'],
-    ['Mirissa', 'Experience coastal food and a relaxed beach atmosphere.'],
-    ['Colombo', 'Finish with another taste of the capital before departure.'],
-  ],
-}
-
-const formatLKR = (value) => new Intl.NumberFormat('en-LK', {
-  style: 'currency',
-  currency: 'LKR',
-  maximumFractionDigits: 0,
-}).format(value)
-
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -108,6 +54,7 @@ function App() {
 
   const [plan, setPlan] = useState(null)
   const [generating, setGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState('')
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -120,7 +67,7 @@ function App() {
     }))
   }
 
-  const generatePlan = (event) => {
+  const generatePlan = async (event) => {
     event.preventDefault()
 
     const days = Math.max(1, Math.min(Number(formData.days) || 1, 14))
@@ -130,34 +77,39 @@ function App() {
     )
 
     setGenerating(true)
+    setGenerationError('')
     setPlan(null)
 
-    window.setTimeout(() => {
-      const selectedRoute =
-        routeLibrary[formData.interests] || routeLibrary['Nature & Adventure']
-
-      const itinerary = Array.from({ length: days }, (_, index) => {
-        const destination = selectedRoute[index % selectedRoute.length]
-
-        return {
-          day: index + 1,
-          place: index === 0 ? formData.startLocation : destination[0],
-          description:
-            index === 0
-              ? `Begin your Sri Lankan journey in ${formData.startLocation}, settle in and prepare for the adventure ahead.`
-              : destination[1],
-        }
+    try {
+      const response = await fetch('/api/generate-itinerary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, days, travelers }),
       })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to generate your itinerary.')
+      }
 
       setPlan({
         ...formData,
+        ...result,
         days,
         travelers,
-        itinerary,
+        itinerary: result.itinerary.map((item, index) => ({
+          ...item,
+          day: item.day || index + 1,
+        })),
       })
-
+    } catch (error) {
+      setGenerationError(
+        error.message || 'Something went wrong. Please try again.',
+      )
+    } finally {
       setGenerating(false)
-    }, 700)
+    }
   }
 
   const resetPlan = () => {
@@ -171,6 +123,7 @@ function App() {
     })
 
     setPlan(null)
+    setGenerationError('')
     setGenerating(false)
   }
 
@@ -389,7 +342,7 @@ function App() {
             </div>
 
             <span>
-              Create a prototype itinerary based on the way you want to
+              Generate a personalized itinerary with Gemini AI, based on the way you want to
               experience Sri Lanka.
             </span>
           </div>
@@ -529,8 +482,7 @@ function App() {
               </button>
 
               <p className="prototypeNote">
-                Prototype planner — itinerary, weather and cost information
-                are demonstration estimates rather than live travel data.
+                Gemini AI generates your itinerary. Budget figures remain indicative estimates; live weather and traffic are not connected yet.
               </p>
             </form>
 
@@ -549,7 +501,23 @@ function App() {
                 </div>
               )}
 
-              {!generating && !plan && (
+              {!generating && !plan && generationError && (
+                <div className="emptyResult" role="alert">
+                  <div className="emptyVisual"><span>!</span></div>
+                  <p>ITINERARY GENERATION</p>
+                  <h3>We couldn't build your journey.</h3>
+                  <span>{generationError}</span>
+                  <button
+                    type="button"
+                    className="secondaryButton"
+                    onClick={() => setGenerationError('')}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {!generating && !plan && !generationError && (
                 <div className="emptyResult">
                   <div className="emptyVisual">
                     <span>✦</span>
@@ -579,8 +547,10 @@ function App() {
                       <h3>{plan.days}-Day Sri Lanka Adventure</h3>
                     </div>
 
-                    <span>PROTOTYPE PLAN</span>
+                    <span>✦ GEMINI AI PLAN</span>
                   </div>
+
+                  {plan.summary && <p className="heroText">{plan.summary}</p>}
 
                   <div className="planStats">
                     <div>
@@ -617,6 +587,12 @@ function App() {
                         <div className="itineraryContent">
                           <h4>{item.place}</h4>
                           <p>{item.description}</p>
+                          {item.activities?.length > 0 && (
+                            <ul className="activityList">
+                              {item.activities.map((activity) => <li key={activity}>{activity}</li>)}
+                            </ul>
+                          )}
+                          {item.travelTip && <p className="travelTip">Tip: {item.travelTip}</p>}
 
                           <div>
                             <span>Suggested stop</span>
