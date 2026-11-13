@@ -518,7 +518,7 @@ function App() {
                     className="secondaryButton"
                     onClick={() => setGenerationError('')}
                   >
-                    Try again
+                    Dismiss
                   </button>
                 </div>
               )}
