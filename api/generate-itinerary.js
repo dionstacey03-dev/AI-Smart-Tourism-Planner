@@ -37,11 +37,11 @@ async function requestGemini(apiKey, prompt) {
   let lastError = null;
 
   // A bounded retry prevents the UI from waiting indefinitely during temporary overload.
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 1; attempt += 1) {
     try {
       const geminiResponse = await fetch(endpoint, {
         method: "POST",
-        signal: AbortSignal.timeout(18000),
+        signal: AbortSignal.timeout(12000),
         headers: {
           "Content-Type": "application/json",
           "x-goog-api-key": apiKey,
@@ -49,8 +49,8 @@ async function requestGemini(apiKey, prompt) {
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 5000,
+            temperature: 0.4,
+            maxOutputTokens: 2600,
             responseMimeType: "application/json",
             responseSchema: itinerarySchema,
           },
@@ -127,8 +127,8 @@ Requirements:
 - Return exactly ${days} itinerary entries, numbered 1 through ${days}.
 - Keep the route geographically sensible; avoid unnecessary long-distance backtracking.
 - Use real, well-known Sri Lankan destinations and attractions. Never invent an attraction.
-- Make each day's description useful and specific. Include 2-4 suggested activities.
-- Include a concise practical travel tip each day.
+- Keep each day's description short and specific. Include exactly 2 suggested activities.
+- Include one short practical travel tip each day.
 - Be realistic about travel time. Do not claim live traffic, availability, weather, or current prices.
 - Do not fabricate opening hours, ticket prices, or transport schedules.
 - All budget discussion must use Sri Lankan rupees (LKR); avoid exact price claims unless clearly marked as rough estimates.
