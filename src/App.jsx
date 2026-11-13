@@ -89,6 +89,7 @@ function App() {
     try {
       const response = await fetch('/api/generate-itinerary', {
         method: 'POST',
+        signal: AbortSignal.timeout(15000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, days, travelers }),
       })
@@ -110,9 +111,10 @@ function App() {
         })),
       })
     } catch (error) {
-      setGenerationError(
-        error.message || 'Something went wrong. Please try again.',
-      )
+      const message = error.name === 'TimeoutError' || error.name === 'AbortError'
+        ? 'This is taking longer than expected. Please try again.'
+        : error.message || 'Something went wrong. Please try again.'
+      setGenerationError(message)
     } finally {
       setGenerating(false)
     }
