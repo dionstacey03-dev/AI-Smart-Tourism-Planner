@@ -652,7 +652,7 @@ function App() {
                       <div>
                         <p>ESTIMATED TRIP BUDGET</p>
                         <h4>
-                          ${formatLKR(estimatedTotal)}
+                          {formatLKR(estimatedTotal)}
                           <span> approx.</span>
                         </h4>
                       </div>
