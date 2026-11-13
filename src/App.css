@@ -1666,3 +1666,78 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================
+   ITINERARY REFINEMENTS
+========================= */
+
+.activityList {
+  margin: 12px 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.activityList li {
+  position: relative;
+  padding: 9px 12px 9px 32px;
+  border: 1px solid rgba(53, 228, 154, 0.075);
+  border-radius: 7px;
+  background: rgba(53, 228, 154, 0.025);
+  color: #b5c8bf;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.activityList li::before {
+  content: "✦";
+  position: absolute;
+  left: 12px;
+  top: 9px;
+  color: #35e49a;
+  font-size: 0.7rem;
+}
+
+.itineraryContent .travelTip {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border-left: 2px solid rgba(53, 228, 154, 0.55);
+  border-radius: 0 6px 6px 0;
+  background: rgba(53, 228, 154, 0.035);
+  color: #9bb0a6;
+  font-size: 0.7rem;
+}
+
+.itineraryItem {
+  background: linear-gradient(120deg, rgba(255,255,255,0.018), rgba(53,228,154,0.012));
+}
+
+.itineraryItem:focus-within {
+  outline: 2px solid rgba(53, 228, 154, 0.35);
+  outline-offset: 2px;
+}
+
+.generatedPlan .heroText {
+  margin-top: 22px;
+  color: #91a69c;
+  font-size: 0.88rem;
+  line-height: 1.8;
+}
+
+.destinationCard:focus-within,
+.featureCard:focus-within {
+  outline: 2px solid rgba(53, 228, 154, 0.35);
+  outline-offset: 3px;
+}
+
+@media (max-width: 650px) {
+  .activityList li {
+    padding: 9px 10px 9px 29px;
+    font-size: 0.72rem;
+  }
+
+  .itineraryContent .travelTip {
+    font-size: 0.68rem;
+  }
+}
