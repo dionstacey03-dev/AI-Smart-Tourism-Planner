@@ -10,16 +10,19 @@ CeylonAI is an AI-powered travel planning application focused on helping visitor
 - Indicative budget estimates displayed in Sri Lankan rupees (LKR)
 - Responsive React + Vite interface
 - Secure server-side Gemini API integration through a Vercel Function
+- Firebase Google sign-in and owner-scoped Firestore trip persistence (requires project configuration)
+- Google Maps itinerary map with advanced destination markers and driving route visualization (requires Maps credentials)
+- Bounded Gemini request timeouts, retry handling and structured output validation
 
-> Budget estimates are illustrative planning guidance, not live quotes. Weather, traffic, attraction opening hours and booking availability are not currently connected.
+> Budget estimates are illustrative planning guidance, not live quotes. Weather, traffic, attraction opening hours and booking availability are not currently connected. Maps route results depend on Google Maps Platform availability and configured APIs.
 
 ## Technology
 
 - React 19 + Vite
 - Google Gemini API
 - Vercel Functions (Node.js)
-- Firebase Authentication and Firestore — planned
-- Google Maps Platform — planned
+- Firebase Authentication and Cloud Firestore
+- Google Maps Platform (Maps JavaScript API, Geocoding and Directions)
 
 ## Run locally
 
@@ -41,7 +44,7 @@ npm install -g vercel
 
 ### 3. Configure the Gemini API key
 
-Create a local `.env` file in the project root:
+Create a local `.env.local` file in the project root using `.env.example` as a template:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -85,23 +88,30 @@ Example request:
 
 The endpoint validates the trip preferences, asks Gemini for a structured itinerary, and returns JSON containing daily destinations, activities and practical tips.
 
+## V2 setup and configuration
+
+See [README-SETUP.md](./README-SETUP.md) for Firebase project creation, Firestore rules deployment, Google Maps API setup, key restrictions and Vercel environment variables. Features that depend on Firebase and Maps remain inactive until their configuration is supplied.
+
 ## Roadmap
 
 - [x] LKR currency display
-- [x] Secure Gemini itinerary endpoint
 - [x] Gemini-generated itinerary connected to the planner
-- [ ] Firebase Authentication
-- [ ] Firestore saved trips
-- [ ] Google Maps and destination markers
-- [ ] Route visualization and live travel integrations
-- [ ] Production hardening, accessibility and end-to-end tests
+- [x] Bounded Gemini timeout and retry handling
+- [x] Firebase client, Google sign-in and owner-only Firestore trip persistence
+- [x] Google Maps destination markers and driving route layer
+- [x] Responsive itinerary map panel and reduced-motion support
+- [ ] Saved-trip dashboard and itinerary editing
+- [ ] Places autocomplete and richer destination details
+- [ ] Live weather, traffic and verified travel availability
+- [ ] End-to-end tests and production security review
 
 ## Security notes
 
 - Keep all API keys in environment variables.
 - Restrict and monitor API usage in Google AI Studio / Google Cloud.
 - Add Firebase-authenticated request verification and rate limiting before opening the generation endpoint to unrestricted public traffic.
-- Restrict browser-exposed Google Maps keys by HTTP referrer and enabled APIs when Maps is added.
+- Restrict browser-exposed Google Maps keys by HTTP referrer and enabled APIs.
+- Firestore rules restrict trip documents to their authenticated owner; deploy the included rules before enabling saved trips.
 
 ---
 
