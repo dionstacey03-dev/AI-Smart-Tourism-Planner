@@ -9,10 +9,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(isFirebaseConfigured)
 
   useEffect(() => {
-    if (!auth) {
-      setLoading(false)
-      return undefined
-    }
+    if (!auth) return undefined
 
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser)
