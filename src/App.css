@@ -1781,3 +1781,42 @@ footer {
   .navbar nav .authButton { width:100%; }
   .planSaveRow { align-items:flex-start; }
 }
+
+
+/* =========================
+   V2 MOTION DETAILS
+========================= */
+.destinationCard,.featureCard,.itineraryItem,.routeCard {
+  transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease;
+}
+.destinationCard:hover,.featureCard:hover {
+  transform:translateY(-5px);
+  border-color:rgba(53,228,154,.3);
+  box-shadow:0 18px 44px rgba(0,0,0,.2);
+}
+.routeCard {
+  animation:ceylonFloat 7s ease-in-out infinite;
+}
+.itineraryItem {
+  animation:ceylonReveal .55s both;
+}
+.itineraryItem:nth-child(2) { animation-delay:.06s; }
+.itineraryItem:nth-child(3) { animation-delay:.12s; }
+.itineraryItem:nth-child(4) { animation-delay:.18s; }
+.itineraryItem:nth-child(5) { animation-delay:.24s; }
+@keyframes ceylonFloat {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-7px); }
+}
+@keyframes ceylonReveal {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
