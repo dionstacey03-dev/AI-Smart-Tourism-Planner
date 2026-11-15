@@ -1,0 +1,16 @@
+.placeAutocomplete {
+  margin-top:10px;
+}
+.placeAutocomplete > span {
+  display:block;
+  margin-top:7px;
+  color:#9caea7;
+  font-size:.72rem;
+}
+.placeAutocomplete gmp-place-autocomplete {
+  width:100%;
+  --gmpx-color-surface: #0c1b15;
+  --gmpx-color-on-surface: #f5faf7;
+  --gmpx-color-on-surface-variant: #9caea7;
+  --gmpx-color-primary: #35e49a;
+}
