@@ -55,8 +55,34 @@ export default function TripMap({ itinerary = [] }) {
           bounds.extend(location)
         })
 
-        if (locations.filter(Boolean).length > 1) map.fitBounds(bounds)
-        else if (locations.filter(Boolean).length === 1) {
+        const validLocations = locations.filter(Boolean)
+        if (validLocations.length > 1) {
+          const directionsService = new maps.DirectionsService()
+          const directionsRenderer = new maps.DirectionsRenderer({
+            map,
+            suppressMarkers: true,
+            preserveViewport: false,
+            polylineOptions: { strokeColor: '#16a36a', strokeOpacity: 0.85, strokeWeight: 5 },
+          })
+          const route = await new Promise((resolve) => {
+            directionsService.route({
+              origin: validLocations[0].location,
+              destination: validLocations[validLocations.length - 1].location,
+              waypoints: validLocations.slice(1, -1).map(({ location }) => ({
+                location,
+                stopover: true,
+              })),
+              optimizeWaypoints: false,
+              travelMode: maps.TravelMode.DRIVING,
+            }, (result, routeStatus) => {
+              if (routeStatus === 'OK' && result) {
+                directionsRenderer.setDirections(result)
+              }
+              resolve(routeStatus)
+            })
+          })
+          if (route !== 'OK') map.fitBounds(bounds)
+        } else if (validLocations.length === 1) {
           map.setCenter(locations.find(Boolean).location)
           map.setZoom(10)
         }
