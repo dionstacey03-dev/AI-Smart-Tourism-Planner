@@ -2,7 +2,7 @@ import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 
 let configured = false
 
-export async function loadGoogleMaps() {
+function configureMaps() {
   const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   if (!key) throw new Error('Google Maps is not configured yet.')
 
@@ -10,7 +10,10 @@ export async function loadGoogleMaps() {
     setOptions({ key, v: 'weekly' })
     configured = true
   }
+}
 
+export async function loadGoogleMaps() {
+  configureMaps()
   const [maps, marker, geocoding, routes] = await Promise.all([
     importLibrary('maps'),
     importLibrary('marker'),
@@ -19,4 +22,9 @@ export async function loadGoogleMaps() {
   ])
 
   return { maps, marker, geocoding, routes }
+}
+
+export async function loadGooglePlaces() {
+  configureMaps()
+  return importLibrary('places')
 }
