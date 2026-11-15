@@ -28,12 +28,6 @@ const itinerarySchema = {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const json = (data, status = 200) => ({
-  status,
-  headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
-  body: data,
-})
-
 function normalizeInput(body = {}) {
   const days = Number(body.days)
   const travelers = Number(body.travelers)
