@@ -1,0 +1,14 @@
+.authButton {
+  min-height:40px;
+  padding:0 16px;
+  border:1px solid rgba(53,228,154,.3);
+  border-radius:8px;
+  background:rgba(53,228,154,.08);
+  color:#dffbef;
+  font-size:.78rem;
+  font-weight:750;
+  cursor:pointer;
+  transition:background .2s ease,transform .2s ease;
+}
+.authButton:hover:not(:disabled) { background:rgba(53,228,154,.16); transform:translateY(-1px); }
+.authButton:disabled { opacity:.55; cursor:not-allowed; }
