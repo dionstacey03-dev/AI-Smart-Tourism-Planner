@@ -1,5 +1,4 @@
-import { signInWithPopup, signOut } from 'firebase/auth'
-import { auth, googleProvider, isFirebaseConfigured } from '../lib/firebase'
+import { getAuthServices, isFirebaseConfigured } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import './AuthButton.css'
 
@@ -7,8 +6,11 @@ export default function AuthButton() {
   const { user, loading } = useAuth()
 
   async function handleClick() {
-    if (!auth) return
+    if (!isFirebaseConfigured) return
     try {
+      const {
+        auth, googleProvider, signInWithPopup, signOut,
+      } = await getAuthServices()
       if (user) await signOut(auth)
       else await signInWithPopup(auth, googleProvider)
     } catch (error) {
