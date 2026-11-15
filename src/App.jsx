@@ -411,6 +411,9 @@ function App() {
                   value={formData.startLocation}
                   onChange={handleChange}
                 >
+                  {!['Colombo', 'Negombo', 'Kandy', 'Galle'].includes(formData.startLocation) && (
+                    <option value={formData.startLocation}>{formData.startLocation}</option>
+                  )}
                   <option>Colombo</option>
                   <option>Negombo</option>
                   <option>Kandy</option>
