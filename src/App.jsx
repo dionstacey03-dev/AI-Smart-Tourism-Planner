@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import TripMap from './components/TripMap'
 import './App.css'
 
 const destinations = [
@@ -576,6 +577,8 @@ function App() {
                       <strong>{plan.travelStyle}</strong>
                     </div>
                   </div>
+
+                  <TripMap itinerary={plan.itinerary} />
 
                   <div className="planSectionTitle">
                     <span>ITINERARY</span>
