@@ -1,8 +1,7 @@
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
+const MAX_DAYS = 14
+const MAX_TRAVELERS = 10
+const REQUEST_TIMEOUT_MS = 9000
+const MAX_ATTEMPTS = 2
 
 const itinerarySchema = {
   type: "OBJECT",
@@ -26,22 +25,43 @@ const itinerarySchema = {
     practicalTips: { type: "ARRAY", items: { type: "STRING" } },
   },
   required: ["title", "summary", "itinerary", "practicalTips"],
-};
+}
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const json = (data, status = 200) => ({
+  status,
+  headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+  body: data,
+})
+
+function normalizeInput(body = {}) {
+  const days = Number(body.days)
+  const travelers = Number(body.travelers)
+  const budget = ["Budget", "Medium", "Premium"].includes(body.budget) ? body.budget : "Medium"
+  const travelStyle = ["Relaxed", "Balanced", "Fast Paced"].includes(body.travelStyle)
+    ? body.travelStyle
+    : "Balanced"
+
+  return {
+    startLocation: String(body.startLocation || "Colombo").trim().slice(0, 80) || "Colombo",
+    days: Number.isFinite(days) ? Math.max(1, Math.min(Math.floor(days), MAX_DAYS)) : 7,
+    travelers: Number.isFinite(travelers) ? Math.max(1, Math.min(Math.floor(travelers), MAX_TRAVELERS)) : 2,
+    budget,
+    interests: String(body.interests || "Nature & Adventure").trim().slice(0, 100),
+    travelStyle,
+  }
+}
 
 async function requestGemini(apiKey, prompt) {
-  const endpoint =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash"
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
+  let lastError
 
-  let lastError = null;
-
-  // A bounded retry prevents the UI from waiting indefinitely during temporary overload.
-  for (let attempt = 1; attempt <= 1; attempt += 1) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const geminiResponse = await fetch(endpoint, {
+      const response = await fetch(endpoint, {
         method: "POST",
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
           "Content-Type": "application/json",
           "x-goog-api-key": apiKey,
@@ -49,147 +69,130 @@ async function requestGemini(apiKey, prompt) {
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 2600,
+            temperature: 0.35,
+            maxOutputTokens: 2200,
             responseMimeType: "application/json",
             responseSchema: itinerarySchema,
           },
         }),
-      });
+      })
 
-      const result = await geminiResponse.json().catch(() => ({}));
+      const payload = await response.json().catch(() => ({}))
+      if (response.ok) return payload
 
-      if (geminiResponse.ok) return result;
-
-      const message = result.error?.message || `Gemini returned HTTP ${geminiResponse.status}`;
-      const retryable = [429, 500, 502, 503, 504].includes(geminiResponse.status);
-
-      if (!retryable || attempt === 2) {
-        const error = new Error(message);
-        error.status = geminiResponse.status;
-        throw error;
-      }
-
-      lastError = new Error(message);
+      const error = new Error(payload.error?.message || `Gemini returned HTTP ${response.status}`)
+      error.status = response.status
+      const retryable = [429, 500, 502, 503, 504].includes(response.status)
+      if (!retryable || attempt === MAX_ATTEMPTS) throw error
+      lastError = error
     } catch (error) {
-      lastError = error;
-      const retryable =
-        error.name === "TimeoutError" ||
-        error.name === "AbortError" ||
-        error.status === undefined ||
-        [429, 500, 502, 503, 504].includes(error.status);
+      lastError = error
+      const retryable = error.name === "TimeoutError"
+        || error.name === "AbortError"
+        || error.status === undefined
+        || [429, 500, 502, 503, 504].includes(error.status)
 
-      if (!retryable || attempt === 2) throw error;
+      if (!retryable || attempt === MAX_ATTEMPTS) throw error
     }
 
-    await sleep(900);
+    await sleep(250 * attempt)
   }
 
-  throw lastError || new Error("Gemini request failed.");
+  throw lastError || new Error("Gemini request failed.")
+}
+
+function parseRequestBody(request) {
+  if (typeof request.body === "string") return JSON.parse(request.body)
+  if (request.body && typeof request.body === "object") return request.body
+  return {}
 }
 
 export default async function handler(request, response) {
+  response.setHeader("Cache-Control", "no-store")
   if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    return response.status(405).json({ error: "Method not allowed." });
+    response.setHeader("Allow", "POST")
+    return response.status(405).json({ error: "Method not allowed." })
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return response.status(503).json({
-      error: "Gemini is not configured yet. Add GEMINI_API_KEY to your environment variables.",
-    });
+      error: "Gemini is not configured. Add GEMINI_API_KEY to the Vercel environment variables.",
+    })
   }
 
+  let input
   try {
-    const body = typeof request.body === "string"
-      ? JSON.parse(request.body)
-      : request.body || {};
+    input = normalizeInput(parseRequestBody(request))
+  } catch {
+    return response.status(400).json({ error: "Please send a valid JSON request." })
+  }
 
-    const startLocation = String(body.startLocation || "Colombo").slice(0, 80);
-    const days = Math.max(1, Math.min(Number(body.days) || 1, 14));
-    const travelers = Math.max(1, Math.min(Number(body.travelers) || 1, 10));
-    const budget = ["Budget", "Medium", "Premium"].includes(body.budget)
-      ? body.budget
-      : "Medium";
-    const interests = String(body.interests || "Nature & Adventure").slice(0, 100);
-    const travelStyle = ["Relaxed", "Balanced", "Fast Paced"].includes(body.travelStyle)
-      ? body.travelStyle
-      : "Balanced";
-
-    const prompt = `
+  const prompt = `
 You are CeylonAI, a careful Sri Lanka travel-planning assistant.
-Create a practical ${days}-day itinerary for ${travelers} traveller(s), starting in ${startLocation}.
-Budget level: ${budget}. Main interest: ${interests}. Travel pace: ${travelStyle}.
+Create a practical ${input.days}-day itinerary for ${input.travelers} traveller(s), starting in ${input.startLocation}.
+Budget level: ${input.budget}. Main interest: ${input.interests}. Travel pace: ${input.travelStyle}.
 
 Requirements:
 - Plan travel only within Sri Lanka.
-- Return exactly ${days} itinerary entries, numbered 1 through ${days}.
-- Keep the route geographically sensible; avoid unnecessary long-distance backtracking.
-- Use real, well-known Sri Lankan destinations and attractions. Never invent an attraction.
-- Keep each day's description short and specific. Include exactly 2 suggested activities.
-- Include one short practical travel tip each day.
-- Be realistic about travel time. Do not claim live traffic, availability, weather, or current prices.
-- Do not fabricate opening hours, ticket prices, or transport schedules.
-- All budget discussion must use Sri Lankan rupees (LKR); avoid exact price claims unless clearly marked as rough estimates.
-- If a destination is season-dependent, mention that the traveller should check conditions before visiting.
+- Return exactly ${input.days} itinerary entries, numbered 1 through ${input.days}.
+- Keep the route geographically sensible and avoid unnecessary backtracking.
+- Use real, well-known Sri Lankan destinations and attractions; do not invent places.
+- Give each day a concise description, exactly two suggested activities and one practical travel tip.
+- Do not claim live traffic, availability, weather, opening hours, transport schedules or current prices.
+- Express budget context in Sri Lankan rupees (LKR), and label estimates as approximate.
 - Return only data matching the supplied JSON schema.
-`;
+`
 
-    const result = await requestGemini(apiKey, prompt);
-    const generatedText = result.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("");
+  try {
+    const result = await requestGemini(apiKey, prompt)
+    const candidate = result.candidates?.[0]
+    const generatedText = candidate?.content?.parts?.map((part) => part.text || "").join("")
 
     if (!generatedText) {
-      return response.status(502).json({
-        error: "Gemini returned an empty itinerary. Please try again.",
-      });
+      console.error("Gemini returned no text", candidate?.finishReason || "unknown finish reason")
+      return response.status(502).json({ error: "Gemini returned an empty itinerary. Please try again." })
     }
 
-    let itinerary;
+    let itinerary
     try {
-      itinerary = JSON.parse(generatedText);
+      itinerary = JSON.parse(generatedText)
     } catch {
-      return response.status(502).json({
-        error: "Gemini returned an unreadable itinerary. Please try again.",
-      });
+      return response.status(502).json({ error: "Gemini returned an unreadable itinerary. Please try again." })
     }
 
-    if (!Array.isArray(itinerary.itinerary) || itinerary.itinerary.length !== days) {
-      return response.status(502).json({
-        error: "The generated itinerary was incomplete. Please try again.",
-      });
+    if (!Array.isArray(itinerary.itinerary) || itinerary.itinerary.length !== input.days) {
+      return response.status(502).json({ error: "The generated itinerary was incomplete. Please try again." })
     }
+
+    const normalizedDays = itinerary.itinerary.map((item, index) => ({
+      day: index + 1,
+      place: String(item.place || "Sri Lanka").slice(0, 100),
+      description: String(item.description || "").slice(0, 500),
+      activities: Array.isArray(item.activities) ? item.activities.slice(0, 4).map((value) => String(value).slice(0, 160)) : [],
+      travelTip: String(item.travelTip || "").slice(0, 300),
+    }))
 
     return response.status(200).json({
-      ...itinerary,
-      days,
-      travelers,
-      budget,
-      interests,
-      travelStyle,
-      startLocation,
+      title: String(itinerary.title || "Your Sri Lanka journey").slice(0, 120),
+      summary: String(itinerary.summary || "").slice(0, 600),
+      itinerary: normalizedDays,
+      practicalTips: Array.isArray(itinerary.practicalTips)
+        ? itinerary.practicalTips.slice(0, 8).map((tip) => String(tip).slice(0, 240))
+        : [],
+      ...input,
       currency: "LKR",
       generatedBy: "Gemini",
-    });
+    })
   } catch (error) {
-    console.error("Itinerary generation failed:", error.message || error);
+    console.error("Itinerary generation failed:", error.message || error)
 
     if (error.name === "TimeoutError" || error.name === "AbortError") {
-      return response.status(504).json({
-        error: "Gemini took too long to respond. Please try again in a moment.",
-      });
+      return response.status(504).json({ error: "Gemini timed out. Please try again; no itinerary was saved." })
     }
-
     if ([429, 500, 502, 503, 504].includes(error.status)) {
-      return response.status(503).json({
-        error: "Gemini is temporarily busy. Please try again shortly.",
-      });
+      return response.status(503).json({ error: "Gemini is temporarily busy. Please try again shortly." })
     }
-
-    return response.status(500).json({
-      error: "We couldn't generate your itinerary. Please try again.",
-    });
+    return response.status(500).json({ error: "We couldn't generate your itinerary. Please try again." })
   }
 }
