@@ -15,8 +15,9 @@ Fill in the variables in `.env.local`. Never commit real credentials.
 2. Add a Web app and copy its configuration into the `VITE_FIREBASE_*` variables.
 3. In Authentication > Sign-in method, enable Google.
 4. Create Cloud Firestore in **Singapore (asia-southeast1)** if offered. Choose the closest suitable region carefully because the database location cannot simply be changed later.
-5. Deploy the included rules with `firebase deploy --only firestore:rules`.
-6. Add `localhost` and your production domain to Authentication > Settings > Authorized domains.
+5. Install and sign in to the Firebase CLI (`npm install -g firebase-tools`, then `firebase login`).
+6. Select your project with `firebase use --add` and deploy the included rules and indexes with `firebase deploy --only firestore`.
+7. Add `localhost` and your production domain to Authentication > Settings > Authorized domains.
 
 Firebase browser configuration is not a server secret. Firestore access is controlled by Authentication and Security Rules. Enable App Check before public launch.
 
