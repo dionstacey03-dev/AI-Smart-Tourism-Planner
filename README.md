@@ -22,7 +22,7 @@ CeylonAI is an AI-powered travel planning application focused on helping visitor
 - Google Gemini API
 - Vercel Functions (Node.js)
 - Firebase Authentication and Cloud Firestore
-- Google Maps Platform (Maps JavaScript API, Geocoding and Directions)
+- Google Maps Platform (Maps JavaScript API, Geocoding, Directions and Places API (New))
 
 ## Run locally
 
@@ -101,7 +101,7 @@ See [README-SETUP.md](./README-SETUP.md) for Firebase project creation, Firestor
 - [x] Google Maps destination markers and driving route layer
 - [x] Responsive itinerary map panel and reduced-motion support
 - [ ] Saved-trip dashboard and itinerary editing
-- [ ] Places autocomplete and richer destination details
+- [x] Places autocomplete for Sri Lankan starting locations
 - [ ] Live weather, traffic and verified travel availability
 - [ ] End-to-end tests and production security review
 
