@@ -113,7 +113,7 @@ function App() {
     try {
       const response = await fetch('/api/generate-itinerary', {
         method: 'POST',
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(22000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, days, travelers }),
       })
