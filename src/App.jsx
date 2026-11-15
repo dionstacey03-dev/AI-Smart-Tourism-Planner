@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import TripMap from './components/TripMap'
+import AuthButton from './components/AuthButton'
+import { useAuth } from './context/AuthContext'
+import { saveTrip } from './lib/trips'
 import './App.css'
 
 const destinations = [
@@ -48,6 +51,9 @@ const formatLKR = (value) => new Intl.NumberFormat('en-LK', {
 }).format(value)
 
 function App() {
+  const { user } = useAuth()
+  const [saveState, setSaveState] = useState('')
+  const [savingTrip, setSavingTrip] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -64,6 +70,23 @@ function App() {
   const [generationError, setGenerationError] = useState('')
 
   const closeMenu = () => setMenuOpen(false)
+
+  const handleSaveTrip = async () => {
+    if (!user || !plan) {
+      setSaveState('Sign in to save this itinerary.')
+      return
+    }
+    setSavingTrip(true)
+    setSaveState('')
+    try {
+      await saveTrip(user.uid, plan)
+      setSaveState('Trip saved to your account.')
+    } catch (error) {
+      setSaveState(error.message || 'Unable to save this trip.')
+    } finally {
+      setSavingTrip(false)
+    }
+  }
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -206,6 +229,7 @@ function App() {
           >
             Plan a Trip
           </a>
+          <AuthButton />
         </nav>
       </header>
 
@@ -560,6 +584,13 @@ function App() {
                   </div>
 
                   {plan.summary && <p className="heroText">{plan.summary}</p>}
+                  <div className="planSaveRow">
+                    <button type="button" className="saveTripButton" onClick={handleSaveTrip} disabled={savingTrip || !user}>
+                      {savingTrip ? 'Saving…' : 'Save this trip'}
+                    </button>
+                    {!user && <span>Sign in to save your itinerary</span>}
+                    {saveState && <span role="status">{saveState}</span>}
+                  </div>
 
                   <div className="planStats">
                     <div>
