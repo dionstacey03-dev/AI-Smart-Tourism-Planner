@@ -416,6 +416,8 @@ function App() {
                   <option>Kandy</option>
                   <option>Galle</option>
                 </select>
+                <PlaceAutocompleteInput onSelect={handleStartLocationSelect} />
+                <p className="selectedLocationNote">Selected starting point: {formData.startLocation}</p>
               </div>
 
               <div className="formRow">
