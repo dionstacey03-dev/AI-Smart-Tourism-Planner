@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import TripMap from './components/TripMap'
 import AuthButton from './components/AuthButton'
+import PlaceAutocompleteInput from './components/PlaceAutocompleteInput'
 import { useAuth } from './hooks/useAuth'
 import { saveTrip } from './lib/trips'
 import './App.css'
@@ -87,6 +88,10 @@ function App() {
       setSavingTrip(false)
     }
   }
+
+  const handleStartLocationSelect = useCallback((value) => {
+    setFormData((previous) => ({ ...previous, startLocation: value }))
+  }, [])
 
   const handleChange = (event) => {
     const { name, value } = event.target
