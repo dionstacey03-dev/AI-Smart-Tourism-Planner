@@ -16,12 +16,13 @@ export default function TripMap({ itinerary = [] }) {
     async function initialize() {
       if (!mapElement.current) return
       try {
-        const { maps, geocoding, routes } = await loadGoogleMaps()
+        const { maps, marker, geocoding, routes } = await loadGoogleMaps()
         if (cancelled) return
 
         map = new maps.Map(mapElement.current, {
           center: SRI_LANKA_CENTER,
           zoom: 7,
+          mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
@@ -46,11 +47,10 @@ export default function TripMap({ itinerary = [] }) {
 
         if (cancelled) return
         locations.filter(Boolean).forEach(({ place, location }, index) => {
-          new maps.Marker({
+          new marker.AdvancedMarkerElement({
             map,
             position: location,
             title: `${index + 1}. ${place}`,
-            label: String(index + 1),
           })
           bounds.extend(location)
         })
