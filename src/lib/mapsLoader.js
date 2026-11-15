@@ -11,10 +11,11 @@ export async function loadGoogleMaps() {
     configured = true
   }
 
-  const [maps, geocoding] = await Promise.all([
+  const [maps, geocoding, routes] = await Promise.all([
     importLibrary('maps'),
     importLibrary('geocoding'),
+    importLibrary('routes'),
   ])
 
-  return { maps, geocoding }
+  return { maps, geocoding, routes }
 }
