@@ -16,7 +16,7 @@ export default function TripMap({ itinerary = [] }) {
     async function initialize() {
       if (!mapElement.current) return
       try {
-        const { maps, geocoding } = await loadGoogleMaps()
+        const { maps, geocoding, routes } = await loadGoogleMaps()
         if (cancelled) return
 
         map = new maps.Map(mapElement.current, {
@@ -29,7 +29,7 @@ export default function TripMap({ itinerary = [] }) {
         })
 
         const geocoder = new geocoding.Geocoder()
-        const bounds = new google.maps.LatLngBounds()
+        const bounds = new maps.LatLngBounds()
         const places = itinerary
           .map((item) => item.place)
           .filter((place, index, all) => place && all.indexOf(place) === index)
@@ -46,7 +46,7 @@ export default function TripMap({ itinerary = [] }) {
 
         if (cancelled) return
         locations.filter(Boolean).forEach(({ place, location }, index) => {
-          new google.maps.Marker({
+          new maps.Marker({
             map,
             position: location,
             title: `${index + 1}. ${place}`,
@@ -57,8 +57,8 @@ export default function TripMap({ itinerary = [] }) {
 
         const validLocations = locations.filter(Boolean)
         if (validLocations.length > 1) {
-          const directionsService = new maps.DirectionsService()
-          const directionsRenderer = new maps.DirectionsRenderer({
+          const directionsService = new routes.DirectionsService()
+          const directionsRenderer = new routes.DirectionsRenderer({
             map,
             suppressMarkers: true,
             preserveViewport: false,
@@ -73,7 +73,7 @@ export default function TripMap({ itinerary = [] }) {
                 stopover: true,
               })),
               optimizeWaypoints: false,
-              travelMode: maps.TravelMode.DRIVING,
+              travelMode: 'DRIVING',
             }, (result, routeStatus) => {
               if (routeStatus === 'OK' && result) {
                 directionsRenderer.setDirections(result)
