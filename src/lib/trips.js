@@ -1,28 +1,15 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
-  where,
-} from 'firebase/firestore'
-import { db } from './firebase'
+import { getFirestoreServices } from './firebase'
 
 const tripsCollection = 'trips'
 
-function requireDatabase() {
-  if (!db) throw new Error('Firebase is not configured yet.')
-  return db
-}
-
 export async function saveTrip(userId, itinerary) {
-  const database = requireDatabase()
   if (!userId) throw new Error('Sign in before saving a trip.')
 
-  const reference = await addDoc(collection(database, tripsCollection), {
+  const {
+    db, addDoc, collection, serverTimestamp,
+  } = await getFirestoreServices()
+
+  const reference = await addDoc(collection(db, tripsCollection), {
     userId,
     itinerary,
     createdAt: serverTimestamp(),
@@ -33,11 +20,14 @@ export async function saveTrip(userId, itinerary) {
 }
 
 export async function getSavedTrips(userId) {
-  const database = requireDatabase()
   if (!userId) return []
 
+  const {
+    db, collection, getDocs, orderBy, query, where,
+  } = await getFirestoreServices()
+
   const tripsQuery = query(
-    collection(database, tripsCollection),
+    collection(db, tripsCollection),
     where('userId', '==', userId),
     orderBy('createdAt', 'desc'),
   )
@@ -47,8 +37,8 @@ export async function getSavedTrips(userId) {
 }
 
 export async function deleteSavedTrip(userId, tripId) {
-  const database = requireDatabase()
   if (!userId || !tripId) throw new Error('A signed-in user and trip are required.')
 
-  await deleteDoc(doc(database, tripsCollection, tripId))
+  const { db, deleteDoc, doc } = await getFirestoreServices()
+  await deleteDoc(doc(db, tripsCollection, tripId))
 }
