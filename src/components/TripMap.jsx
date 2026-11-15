@@ -81,6 +81,7 @@ export default function TripMap({ itinerary = [] }) {
               resolve(routeStatus)
             })
           })
+          if (cancelled) return
           if (route !== 'OK') map.fitBounds(bounds)
         } else if (validLocations.length === 1) {
           map.setCenter(locations.find(Boolean).location)
