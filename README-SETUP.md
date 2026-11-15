@@ -23,10 +23,10 @@ Firebase browser configuration is not a server secret. Firestore access is contr
 ## Google Maps
 
 1. Create/select a Google Cloud project at https://console.cloud.google.com/.
-2. Attach a billing account and enable Maps JavaScript API.
+2. Attach a billing account and enable Maps JavaScript API, Geocoding API and Directions API.
 3. Create a browser API key.
 4. Restrict its application to HTTP referrers for localhost and your production domain.
-5. Restrict API access to Maps JavaScript API. Enable Places API (New) when Places search is added.
+5. Restrict API access to Maps JavaScript API, Geocoding API and Directions API. Enable Places API (New) when Places search is added.
 6. Put the key in `VITE_GOOGLE_MAPS_API_KEY` locally and in Vercel's environment variables.
 
 Do not reuse the Gemini key for Maps. Configure quotas and budget alerts in Google Cloud. Maps API usage can incur charges.
