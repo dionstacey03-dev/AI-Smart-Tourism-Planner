@@ -1,20 +1,34 @@
 import { useEffect, useState } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
-import { auth, isFirebaseConfigured } from '../lib/firebase'
+import { getAuthServices, isFirebaseConfigured } from '../lib/firebase'
 import { AuthContext } from './auth-context'
-
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(isFirebaseConfigured)
 
   useEffect(() => {
-    if (!auth) return undefined
+    if (!isFirebaseConfigured) return undefined
 
-    return onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser)
-      setLoading(false)
-    })
+    let active = true
+    let unsubscribe
+
+    getAuthServices()
+      .then(({ auth, onAuthStateChanged }) => {
+        if (!active) return
+        unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+          setUser(nextUser)
+          setLoading(false)
+        })
+      })
+      .catch((error) => {
+        console.error('Firebase authentication initialization failed:', error)
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+      unsubscribe?.()
+    }
   }, [])
 
   return (
