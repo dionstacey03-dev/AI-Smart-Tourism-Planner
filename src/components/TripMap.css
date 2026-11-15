@@ -1,0 +1,46 @@
+.tripMapSection {
+  margin: 28px 0;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 18px;
+  background: rgba(255,255,255,.025);
+}
+.tripMapHeading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.tripMapHeading > div > span {
+  color:#35e49a;
+  font-size:.65rem;
+  font-weight:800;
+  letter-spacing:.13em;
+}
+.tripMapHeading h4 { margin-top:5px; font-size:1.1rem; }
+.tripMapCount,.tripMapHint { color:#9caea7; font-size:.78rem; }
+.tripMapCanvas {
+  position:relative;
+  width:100%;
+  height:340px;
+  overflow:hidden;
+  border-radius:12px;
+  background:linear-gradient(135deg,#102b22,#183e31);
+}
+.tripMapOverlay {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  color:#d7e9e0;
+  text-align:center;
+  background:rgba(6,16,13,.56);
+  z-index:1;
+}
+.tripMapHint { margin-top:10px; }
+@media (max-width:600px) {
+  .tripMapSection { padding:12px; }
+  .tripMapCanvas { height:260px; }
+}
