@@ -1,6 +1,4 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,6 +16,30 @@ const app = isFirebaseConfigured
   ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
   : null
 
-export const auth = app ? getAuth(app) : null
-export const db = app ? getFirestore(app) : null
-export const googleProvider = new GoogleAuthProvider()
+let authServicesPromise
+let firestoreServicesPromise
+
+export function getAuthServices() {
+  if (!app) return Promise.reject(new Error('Firebase is not configured yet.'))
+
+  authServicesPromise ??= import('firebase/auth').then((services) => ({
+    auth: services.getAuth(app),
+    googleProvider: new services.GoogleAuthProvider(),
+    onAuthStateChanged: services.onAuthStateChanged,
+    signInWithPopup: services.signInWithPopup,
+    signOut: services.signOut,
+  }))
+
+  return authServicesPromise
+}
+
+export function getFirestoreServices() {
+  if (!app) return Promise.reject(new Error('Firebase is not configured yet.'))
+
+  firestoreServicesPromise ??= import('firebase/firestore').then((services) => ({
+    ...services,
+    db: services.getFirestore(app),
+  }))
+
+  return firestoreServicesPromise
+}
