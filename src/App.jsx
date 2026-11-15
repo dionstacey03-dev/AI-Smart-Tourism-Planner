@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import TripMap from './components/TripMap'
 import AuthButton from './components/AuthButton'
-import { useAuth } from './context/AuthContext'
+import { useAuth } from './hooks/useAuth'
 import { saveTrip } from './lib/trips'
 import './App.css'
 
