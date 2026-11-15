@@ -16,7 +16,7 @@ export default function TripMap({ itinerary = [] }) {
     async function initialize() {
       if (!mapElement.current) return
       try {
-        const { maps } = await loadGoogleMaps()
+        const { maps, geocoding } = await loadGoogleMaps()
         if (cancelled) return
 
         map = new maps.Map(mapElement.current, {
@@ -28,7 +28,7 @@ export default function TripMap({ itinerary = [] }) {
           gestureHandling: 'cooperative',
         })
 
-        const geocoder = new google.maps.Geocoder()
+        const geocoder = new geocoding.Geocoder()
         const bounds = new google.maps.LatLngBounds()
         const places = itinerary
           .map((item) => item.place)
