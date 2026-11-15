@@ -1820,3 +1820,10 @@ footer {
     transition-duration:.01ms !important;
   }
 }
+
+
+.selectedLocationNote {
+  margin-top:8px;
+  color:#9caea7;
+  font-size:.72rem;
+}
