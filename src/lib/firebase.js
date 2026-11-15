@@ -37,8 +37,16 @@ export function getFirestoreServices() {
   if (!app) return Promise.reject(new Error('Firebase is not configured yet.'))
 
   firestoreServicesPromise ??= import('firebase/firestore').then((services) => ({
-    ...services,
     db: services.getFirestore(app),
+    addDoc: services.addDoc,
+    collection: services.collection,
+    deleteDoc: services.deleteDoc,
+    doc: services.doc,
+    getDocs: services.getDocs,
+    orderBy: services.orderBy,
+    query: services.query,
+    serverTimestamp: services.serverTimestamp,
+    where: services.where,
   }))
 
   return firestoreServicesPromise
