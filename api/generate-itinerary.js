@@ -41,7 +41,7 @@ function normalizeInput(body = {}) {
     days: Number.isFinite(days) ? Math.max(1, Math.min(Math.floor(days), MAX_DAYS)) : 7,
     travelers: Number.isFinite(travelers) ? Math.max(1, Math.min(Math.floor(travelers), MAX_TRAVELERS)) : 2,
     budget,
-    interests: String(body.interests || "Nature & Adventure").trim().slice(0, 100),
+    interests: String(body.interests || "Nature & Adventure").trim().slice(0, 100) || "Nature & Adventure",
     travelStyle,
   }
 }
@@ -138,6 +138,7 @@ Requirements:
 - Return only data matching the supplied JSON schema.
 `
 
+  const generationStartedAt = Date.now()
   try {
     const result = await requestGemini(apiKey, prompt)
     const candidate = result.candidates?.[0]
@@ -155,7 +156,10 @@ Requirements:
       return response.status(502).json({ error: "Gemini returned an unreadable itinerary. Please try again." })
     }
 
-    if (!Array.isArray(itinerary.itinerary) || itinerary.itinerary.length !== input.days) {
+    if (!Array.isArray(itinerary.itinerary)
+      || itinerary.itinerary.length !== input.days
+      || !itinerary.itinerary.every((item) => item.place && item.description
+        && Array.isArray(item.activities) && item.activities.length >= 2)) {
       return response.status(502).json({ error: "The generated itinerary was incomplete. Please try again." })
     }
 
@@ -163,7 +167,7 @@ Requirements:
       day: index + 1,
       place: String(item.place || "Sri Lanka").slice(0, 100),
       description: String(item.description || "").slice(0, 500),
-      activities: Array.isArray(item.activities) ? item.activities.slice(0, 4).map((value) => String(value).slice(0, 160)) : [],
+      activities: item.activities.slice(0, 2).map((value) => String(value).slice(0, 160)),
       travelTip: String(item.travelTip || "").slice(0, 300),
     }))
 
@@ -177,6 +181,8 @@ Requirements:
       ...input,
       currency: "LKR",
       generatedBy: "Gemini",
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      generationMs: Date.now() - generationStartedAt,
     })
   } catch (error) {
     console.error("Itinerary generation failed:", error.message || error)
