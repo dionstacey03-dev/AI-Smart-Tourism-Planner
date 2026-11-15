@@ -1,6 +1,6 @@
 import { signInWithPopup, signOut } from 'firebase/auth'
 import { auth, googleProvider, isFirebaseConfigured } from '../lib/firebase'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import './AuthButton.css'
 
 export default function AuthButton() {
