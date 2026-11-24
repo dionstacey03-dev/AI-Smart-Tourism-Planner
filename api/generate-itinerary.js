@@ -1,9 +1,3 @@
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
-
 const itinerarySchema = {
   type: "OBJECT",
   properties: {
@@ -37,7 +31,7 @@ async function requestGemini(apiKey, prompt) {
   let lastError = null;
 
   // A bounded retry prevents the UI from waiting indefinitely during temporary overload.
-  for (let attempt = 1; attempt <= 1; attempt += 1) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
       const geminiResponse = await fetch(endpoint, {
         method: "POST",
